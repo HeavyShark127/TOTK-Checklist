@@ -1,0 +1,860 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TotK 100% Tracker</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --gold: #C9A84C;
+    --gold-bright: #F0C040;
+    --gold-dim: #7A5E2A;
+    --emerald: #2EB87A;
+    --emerald-dim: #1A6644;
+    --sky: #5BB8D4;
+    --stone-900: #0D1117;
+    --stone-800: #161C26;
+    --stone-700: #1F2A38;
+    --stone-600: #2A3848;
+    --stone-500: #3A4F63;
+    --stone-400: #6B8299;
+    --stone-200: #A8BDD0;
+    --stone-100: #D0DDE8;
+    --rune-glow: rgba(201,168,76,0.15);
+    --text: #E8D5A8;
+    --text-dim: #8FA8BE;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background-color: var(--stone-900);
+    background-image:
+      radial-gradient(ellipse 80% 50% at 50% 0%, rgba(42,56,72,0.6) 0%, transparent 70%),
+      repeating-linear-gradient(0deg, transparent, transparent 39px, rgba(255,255,255,0.015) 40px),
+      repeating-linear-gradient(90deg, transparent, transparent 39px, rgba(255,255,255,0.015) 40px);
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    min-height: 100vh;
+  }
+
+  /* ── Header ── */
+  header {
+    text-align: center;
+    padding: 48px 24px 32px;
+    position: relative;
+  }
+
+  .rune-ring {
+    width: 120px;
+    height: 120px;
+    margin: 0 auto 24px;
+    position: relative;
+  }
+
+  .rune-ring svg { width: 100%; height: 100%; }
+
+  #progress-arc {
+    transition: stroke-dashoffset 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    filter: drop-shadow(0 0 6px var(--gold));
+  }
+
+  .ring-label {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .ring-pct {
+    font-family: 'Cinzel', serif;
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--gold-bright);
+    line-height: 1;
+    text-shadow: 0 0 12px var(--gold);
+  }
+
+  .ring-sub {
+    font-size: 9px;
+    color: var(--stone-400);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-top: 3px;
+  }
+
+  h1 {
+    font-family: 'Cinzel', serif;
+    font-size: clamp(18px, 4vw, 30px);
+    font-weight: 700;
+    color: var(--gold-bright);
+    letter-spacing: 0.05em;
+    text-shadow: 0 0 24px rgba(201,168,76,0.5);
+  }
+
+  .subtitle {
+    font-size: 12px;
+    color: var(--stone-400);
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    margin-top: 6px;
+  }
+
+  .progress-bar-wrap {
+    max-width: 500px;
+    margin: 20px auto 0;
+  }
+
+  .progress-bar-bg {
+    height: 6px;
+    background: var(--stone-700);
+    border-radius: 99px;
+    overflow: hidden;
+  }
+
+  .progress-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--gold-dim), var(--gold-bright));
+    border-radius: 99px;
+    transition: width 0.5s ease;
+    box-shadow: 0 0 8px var(--gold);
+  }
+
+  .progress-counts {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    color: var(--stone-400);
+    margin-top: 6px;
+  }
+
+  /* ── Controls ── */
+  .controls {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    padding: 0 24px 24px;
+    flex-wrap: wrap;
+  }
+
+  .btn {
+    background: var(--stone-700);
+    border: 1px solid var(--stone-500);
+    color: var(--stone-200);
+    padding: 7px 16px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-family: 'Inter', sans-serif;
+    cursor: pointer;
+    letter-spacing: 0.05em;
+    transition: background 0.15s, border-color 0.15s, color 0.15s;
+  }
+
+  .btn:hover { background: var(--stone-600); border-color: var(--stone-400); color: var(--text); }
+  .btn.danger:hover { background: #4A1A1A; border-color: #8B2020; color: #FF8888; }
+
+  .search-wrap {
+    display: flex;
+    justify-content: center;
+    padding: 0 24px 20px;
+  }
+
+  .search-wrap input {
+    background: var(--stone-800);
+    border: 1px solid var(--stone-600);
+    color: var(--text);
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-family: 'Inter', sans-serif;
+    width: 100%;
+    max-width: 400px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  .search-wrap input:focus { border-color: var(--gold-dim); }
+  .search-wrap input::placeholder { color: var(--stone-400); }
+
+  /* ── Main grid ── */
+  main {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 16px 48px;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 16px;
+  }
+
+  /* ── Category card ── */
+  .cat-card {
+    background: var(--stone-800);
+    border: 1px solid var(--stone-600);
+    border-radius: 12px;
+    overflow: hidden;
+    transition: border-color 0.2s;
+  }
+
+  .cat-card:hover { border-color: var(--stone-500); }
+
+  .cat-card.hidden { display: none; }
+
+  .cat-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 16px;
+    cursor: pointer;
+    background: var(--stone-700);
+    user-select: none;
+  }
+
+  .cat-header:hover { background: var(--stone-600); }
+
+  .cat-icon { font-size: 18px; flex-shrink: 0; }
+
+  .cat-title {
+    font-family: 'Cinzel', serif;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--gold);
+    letter-spacing: 0.04em;
+    flex: 1;
+  }
+
+  .cat-badge {
+    font-size: 11px;
+    color: var(--stone-400);
+    background: var(--stone-900);
+    padding: 2px 8px;
+    border-radius: 99px;
+    white-space: nowrap;
+    transition: color 0.2s;
+  }
+
+  .cat-badge.complete { color: var(--emerald); }
+
+  .cat-chevron {
+    font-size: 10px;
+    color: var(--stone-400);
+    transition: transform 0.2s;
+    margin-left: 4px;
+  }
+
+  .cat-card.collapsed .cat-chevron { transform: rotate(-90deg); }
+
+  .mini-bar {
+    height: 3px;
+    background: var(--stone-600);
+  }
+
+  .mini-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--emerald-dim), var(--emerald));
+    transition: width 0.4s ease;
+  }
+
+  .cat-body { padding: 8px 0; }
+  .cat-card.collapsed .cat-body { display: none; }
+
+  /* ── Check items ── */
+  .check-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 7px 16px;
+    cursor: pointer;
+    transition: background 0.1s;
+    border-radius: 4px;
+    margin: 0 4px;
+  }
+
+  .check-item:hover { background: var(--stone-700); }
+  .check-item.sub { padding-left: 32px; }
+
+  .check-item input[type="checkbox"] { display: none; }
+
+  .custom-cb {
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
+    border: 1.5px solid var(--stone-500);
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 1px;
+    transition: background 0.15s, border-color 0.15s;
+    background: var(--stone-900);
+  }
+
+  .check-item:hover .custom-cb { border-color: var(--gold-dim); }
+
+  .check-item.checked .custom-cb {
+    background: var(--emerald);
+    border-color: var(--emerald);
+  }
+
+  .check-item.checked .custom-cb::after {
+    content: '';
+    width: 9px;
+    height: 6px;
+    border-left: 2px solid #fff;
+    border-bottom: 2px solid #fff;
+    transform: rotate(-45deg) translate(1px, -1px);
+    display: block;
+  }
+
+  .item-label {
+    font-size: 13px;
+    color: var(--stone-100);
+    line-height: 1.4;
+    transition: color 0.15s;
+    flex: 1;
+  }
+
+  .check-item.checked .item-label {
+    color: var(--stone-400);
+    text-decoration: line-through;
+    text-decoration-color: var(--stone-500);
+  }
+
+  .item-note {
+    font-size: 10px;
+    color: var(--stone-400);
+    margin-top: 2px;
+    font-style: italic;
+  }
+
+  /* ── Section divider within a card ── */
+  .section-label {
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--stone-400);
+    padding: 10px 16px 4px;
+    border-top: 1px solid var(--stone-700);
+    margin-top: 4px;
+  }
+
+  .section-label:first-child { border-top: none; margin-top: 0; }
+
+  /* ── Footer ── */
+  footer {
+    text-align: center;
+    padding: 16px;
+    font-size: 11px;
+    color: var(--stone-500);
+    border-top: 1px solid var(--stone-700);
+  }
+
+  @media (max-width: 600px) {
+    main { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="rune-ring">
+    <svg viewBox="0 0 120 120">
+      <circle cx="60" cy="60" r="52" fill="none" stroke="#1F2A38" stroke-width="8"/>
+      <circle cx="60" cy="60" r="52" fill="none" stroke="#7A5E2A" stroke-width="1" stroke-dasharray="4 6" opacity="0.4"/>
+      <circle id="progress-arc" cx="60" cy="60" r="52"
+        fill="none" stroke="#C9A84C" stroke-width="8"
+        stroke-linecap="round"
+        stroke-dasharray="326.7"
+        stroke-dashoffset="326.7"
+        transform="rotate(-90 60 60)"/>
+    </svg>
+    <div class="ring-label">
+      <div class="ring-pct" id="pct-label">0%</div>
+      <div class="ring-sub">complete</div>
+    </div>
+  </div>
+  <h1>The Legend of Zelda</h1>
+  <div class="subtitle">Tears of the Kingdom · 100% Tracker</div>
+  <div class="progress-bar-wrap">
+    <div class="progress-bar-bg"><div class="progress-bar-fill" id="main-bar" style="width:0%"></div></div>
+    <div class="progress-counts">
+      <span id="count-done">0 checked</span>
+      <span id="count-total">0 total</span>
+    </div>
+  </div>
+</header>
+
+<div class="controls">
+  <button class="btn" onclick="expandAll()">Expand All</button>
+  <button class="btn" onclick="collapseAll()">Collapse All</button>
+  <button class="btn" onclick="showAll()">Show All</button>
+  <button class="btn" onclick="hideCompleted()">Hide Completed</button>
+  <button class="btn danger" onclick="confirmReset()">Reset Progress</button>
+</div>
+
+<div class="search-wrap">
+  <input type="text" id="search" placeholder="Search items…" oninput="filterSearch(this.value)">
+</div>
+
+<main id="main"></main>
+
+<footer>Progress is saved automatically in your browser · TotK 100% Checklist</footer>
+
+<script>
+// ─── Data ────────────────────────────────────────────────────────────────────
+const CATEGORIES = [
+  {
+    id: 'map',
+    icon: '🗺️',
+    title: 'Map Completion',
+    items: [
+      { id: 'shrines', label: '152 Shrines' },
+      { id: 'lightroots', label: '120 Lightroots' },
+      { id: 'skyview_towers', label: '15 Skyview Towers' },
+      { id: 'stables', label: '14 Stables' },
+      { id: 'great_fairies', label: '4 Great Fairies & The Horse God' },
+      { id: 'dragon_tears', label: '12 Dragon Tears' },
+      { id: 'device_dispensers', label: '30 Device Dispensers' },
+      { id: 'ancient_tech_labs', label: '2 Ancient Tech Labs' },
+      { id: 'bargainer_statues', label: '7 Bargainer Statues' },
+      { id: 'korok_seeds', label: '800 Korok Seeds' },
+      { id: 'wells', label: '58 Wells' },
+      { id: 'chasms', label: '36 Chasms' },
+      { id: 'cave_entrances', label: '194 Cave Entrances', note: 'Note: Komo Shoreline Cave listed as Well on Zelda Maps' },
+      { id: 'villages', label: '10 Villages' },
+      { id: 'dungeons', label: '6 Dungeons', note: 'Includes Spirit Temple and Hyrule Castle' },
+    ]
+  },
+  {
+    id: 'shrines_all',
+    icon: '🔵',
+    title: 'All Shrines & Lightroots',
+    items: [
+      { id: 'surface_shrines', label: '120 Surface Shrines' },
+      { id: 'sky_shrines', label: '32 Sky Shrines' },
+      { id: 'all_lightroots', label: '120 Lightroots' },
+    ]
+  },
+  {
+    id: 'compendium',
+    icon: '📷',
+    title: 'Hyrule Compendium (509 Entries)',
+    items: [
+      { id: 'comp_creatures', label: '92 Creatures' },
+      { id: 'comp_monsters', label: '110 Monsters' },
+      { id: 'comp_materials', label: '126 Materials' },
+      { id: 'comp_equipment', label: '175 Equipment' },
+      { id: 'comp_treasures', label: '6 Treasures' },
+    ]
+  },
+  {
+    id: 'quests',
+    icon: '📜',
+    title: 'Quest Completion',
+    items: [
+      { id: 'main_quests', label: '23 Main Quests' },
+      { id: 'side_adventures', label: '60 Side Adventures' },
+      { id: 'shrine_quests', label: '31 Shrine Quests' },
+      { id: 'side_quests', label: '139 Side Quests' },
+      { id: 'memories', label: '18 Memories' },
+    ]
+  },
+  {
+    id: 'key_items',
+    icon: '🗝️',
+    title: 'Key Items',
+    sections: [
+      {
+        label: 'Core Items',
+        items: [
+          { id: 'hestus_gift', label: "Hestu's Gift", note: 'Collect all 1000 Korok Seeds' },
+          { id: 'purah_pad', label: 'Purah Pad' },
+          { id: 'camera', label: 'Camera' },
+          { id: 'full_energy_cell', label: 'Full Energy Cell' },
+          { id: 'paraglider', label: 'Paraglider' },
+          { id: '3_travel_medallions', label: '3 Travel Medallions' },
+          { id: 'earthwake_manual', label: 'Earthwake Manual' },
+        ]
+      },
+      {
+        label: "Sages' Solemn Vows",
+        items: [
+          { id: 'vow_tulin', label: 'Solemn Vow of Tulin, Sage of Wind', note: 'Upgrade a Sage at Goddess Statue with 4 Sage\'s Wills' },
+          { id: 'vow_yunobo', label: 'Solemn Vow of Yunobo, Sage of Fire', note: 'Upgrade a Sage at Goddess Statue with 4 Sage\'s Wills' },
+          { id: 'vow_sidon', label: 'Solemn Vow of Sidon, Sage of Water', note: 'Upgrade a Sage at Goddess Statue with 4 Sage\'s Wills' },
+          { id: 'vow_riju', label: 'Solemn Vow of Riju, Sage of Lightning', note: 'Upgrade a Sage at Goddess Statue with 4 Sage\'s Wills' },
+          { id: 'vow_mineru', label: 'Solemn Vow of Mineru, Sage of Spirit', note: 'Upgrade a Sage at Goddess Statue with 4 Sage\'s Wills' },
+        ]
+      },
+      {
+        label: 'Schematics & Maps',
+        items: [
+          { id: 'schema_stones', label: '12 Schema Stones' },
+          { id: 'yiga_schematics', label: '34 Yiga Schematics' },
+          { id: 'old_maps', label: '31 Old Maps' },
+        ]
+      },
+      {
+        label: 'Monster Medals',
+        items: [
+          { id: 'medal_molduga', label: 'Molduga Monster Medal' },
+          { id: 'medal_stone_talus', label: 'Stone Talus Monster Medal' },
+          { id: 'medal_hinox', label: 'Hinox Monster Medal' },
+          { id: 'medal_flux', label: 'Flux Construct Monster Medal' },
+          { id: 'medal_gleeok', label: 'Gleeok Monster Medal' },
+          { id: 'medal_frox', label: 'Frox Monster Medal' },
+        ]
+      },
+      {
+        label: 'Special Rewards',
+        items: [
+          { id: 'pony_points', label: "Pony Points Card" },
+          { id: 'alls_well', label: "All's Well", note: 'Find all 58 wells for Fera' },
+          { id: 'dispelling_darkness', label: 'Dispelling Darkness Medal', note: 'Light all 120 Lightroots in The Depths' },
+        ]
+      },
+      {
+        label: 'Saddles & Bridles',
+        items: [
+          { id: 'saddle_traveler', label: "Traveler's Saddle & Bridle" },
+          { id: 'saddle_towing', label: 'Towing Harness' },
+          { id: 'saddle_stable', label: 'Stable Saddle & Bridle' },
+          { id: 'saddle_royal', label: 'Royal Saddle & Bridle' },
+          { id: 'saddle_monster', label: 'Monster Saddle & Bridle' },
+          { id: 'saddle_knight', label: "Knight's Saddle & Bridle" },
+          { id: 'saddle_extravagant', label: 'Extravagant Saddle & Bridle' },
+        ]
+      },
+    ]
+  },
+  {
+    id: 'fabrics',
+    icon: '🪁',
+    title: 'Paraglider Fabrics',
+    items: [
+      { id: 'fab_addison', label: "Addison's Fabric" },
+      { id: 'fab_aerocuda', label: 'Aerocuda Fabric' },
+      { id: 'fab_cece', label: 'Cece Fabric' },
+      { id: 'fab_chuchu', label: 'Chuchu Fabric' },
+      { id: 'fab_cucco', label: 'Cucco Fabric' },
+      { id: 'fab_eldin_ostrich', label: 'Eldin-Ostrich Fabric' },
+      { id: 'fab_gerudo', label: 'Gerudo Fabric' },
+      { id: 'fab_gleeok', label: 'Gleeok Fabric' },
+      { id: 'fab_goron', label: 'Goron Fabric' },
+      { id: 'fab_grizzlemaw', label: 'Grizzlemaw-Bear Fabric' },
+      { id: 'fab_horse', label: 'Horse Fabric' },
+      { id: 'fab_horse_god', label: 'Horse-God Fabric' },
+      { id: 'fab_hudson', label: 'Hudson Construction Fabric' },
+      { id: 'fab_koltin', label: "Koltin's Fabric", note: 'Reward for collecting all 147 Bubbul Gems' },
+      { id: 'fab_korok', label: 'Korok Fabric' },
+      { id: 'fab_lucky_clover', label: 'Lucky Clover Gazette Fabric' },
+      { id: 'fab_lurelin', label: 'Lurelin Village Fabric' },
+      { id: 'fab_lynel', label: 'Lynel Fabric' },
+      { id: 'fab_mcc', label: 'Monster-Control-Crew Fabric' },
+      { id: 'fab_nostalgic', label: 'Nostalgic Fabric' },
+      { id: 'fab_ordinary', label: 'Ordinary Fabric' },
+      { id: 'fab_robbie', label: "Robbie's Fabric" },
+      { id: 'fab_royal', label: 'Royal Hyrulean Fabric' },
+      { id: 'fab_sheikah', label: 'Sheikah Fabric' },
+      { id: 'fab_stalnox', label: 'Stalnox Fabric' },
+      { id: 'fab_yiga', label: 'Yiga Fabric' },
+      { id: 'fab_zonai', label: 'Zonai Fabric' },
+      { id: 'fab_zonai_survey', label: 'Zonai Survey Team Fabric' },
+      { id: 'fab_zora', label: 'Zora Fabric' },
+    ]
+  },
+  {
+    id: 'armor',
+    icon: '🛡️',
+    title: 'Armor (4★ Upgrade All)',
+    sections: [
+      {
+        label: 'Base & Early Sets',
+        items: [
+          { id: 'arm_archaic', label: 'All 3 Archaic Pieces' },
+          { id: 'arm_hylian', label: 'Hylian Set' },
+          { id: 'arm_soldier', label: "Soldier's Set" },
+          { id: 'arm_snowquil', label: 'Snowquil Set' },
+          { id: 'arm_flamebreaker', label: 'Flamebreaker Set' },
+          { id: 'arm_zora', label: 'Zora Set' },
+          { id: 'arm_desert_voe', label: 'Desert Voe Set' },
+          { id: 'arm_rubber', label: 'Rubber Set' },
+          { id: 'arm_stealth', label: 'Stealth Set' },
+          { id: 'arm_climber', label: "Climber's Set" },
+          { id: 'arm_barbarian', label: 'Barbarian Set' },
+          { id: 'arm_radiant', label: 'Radiant Set' },
+          { id: 'arm_royal_guard', label: 'Royal Guard Set' },
+          { id: 'arm_froggy', label: 'Froggy Set' },
+          { id: 'arm_glide', label: 'Glide Set' },
+        ]
+      },
+      {
+        label: 'Depths & Special Sets',
+        items: [
+          { id: 'arm_depths', label: '"of the Depths" Set' },
+          { id: 'arm_miner', label: "Miner's Set" },
+          { id: 'arm_mystic', label: 'Mystic Set' },
+          { id: 'arm_ember', label: 'Ember Set' },
+          { id: 'arm_charged', label: 'Charged Set' },
+          { id: 'arm_frostbite', label: 'Frostbite Set' },
+          { id: 'arm_yiga', label: 'Yiga Set' },
+          { id: 'arm_zonaite', label: 'Zonaite Set' },
+        ]
+      },
+      {
+        label: 'Divine Helms',
+        items: [
+          { id: 'arm_medoh_helm', label: 'Vah Medoh Divine Helm' },
+          { id: 'arm_rudania_helm', label: 'Vah Rudania Divine Helm' },
+          { id: 'arm_ruta_helm', label: 'Vah Ruta Divine Helm' },
+          { id: 'arm_naboris_helm', label: 'Vah Naboris Divine Helm' },
+        ]
+      },
+      {
+        label: 'Jewellery',
+        items: [
+          { id: 'arm_diamond_circ', label: 'Diamond Circlet' },
+          { id: 'arm_ruby_circ', label: 'Ruby Circlet' },
+          { id: 'arm_sapphire_circ', label: 'Sapphire Circlet' },
+          { id: 'arm_topaz_ear', label: 'Topaz Earrings' },
+          { id: 'arm_opal_ear', label: 'Opal Earrings' },
+          { id: 'arm_amber_ear', label: 'Amber Earrings' },
+          { id: 'arm_wellworn', label: 'Well-Worn Hair Band' },
+          { id: 'arm_cece_hat', label: 'Cece Hat' },
+          { id: 'arm_lightning_helm', label: 'Lightning Helm' },
+          { id: 'arm_sand_boots', label: 'Sand Boots' },
+          { id: 'arm_snow_boots', label: 'Snow Boots' },
+        ]
+      },
+      {
+        label: 'Monster Masks',
+        items: [
+          { id: 'arm_bokoblin_mask', label: 'Bokoblin Mask' },
+          { id: 'arm_horriblin_mask', label: 'Horriblin Mask' },
+          { id: 'arm_moblin_mask', label: 'Moblin Mask' },
+          { id: 'arm_lizalfos_mask', label: 'Lizalfos Mask' },
+          { id: 'arm_lynel_mask', label: 'Lynel Mask' },
+        ]
+      },
+      {
+        label: 'Special & Amiibo',
+        items: [
+          { id: 'arm_tunic_memories', label: 'Tunic of Memories' },
+          { id: 'arm_champions', label: 'Champions Leathers' },
+          { id: 'arm_island_lobster', label: 'Island Lobster Shirt' },
+          { id: 'arm_ravios_hood', label: "Ravio's Hood" },
+          { id: 'arm_zant_helm', label: "Zant's Helmet" },
+          { id: 'arm_midna_helm', label: "Midna's Helmet" },
+          { id: 'arm_majora_mask', label: "Majora's Mask" },
+          { id: 'arm_korok_mask', label: 'Korok Mask' },
+          { id: 'arm_tingle', label: "Tingle's Set" },
+          { id: 'arm_phantom', label: 'Phantom Set' },
+          { id: 'arm_evil_spirit', label: 'Evil Spirit Set' },
+          { id: 'arm_sheik_mask', label: "Sheik's Mask" },
+          { id: 'arm_dark', label: 'Dark Set' },
+          { id: 'arm_fierce_deity', label: 'Fierce Deity Set' },
+          { id: 'arm_awakening', label: '"of Awakening" Set' },
+          { id: 'arm_wild', label: '"of the Wild" Set' },
+          { id: 'arm_hero', label: '"of the Hero" Set' },
+          { id: 'arm_time', label: '"of Time" Set' },
+          { id: 'arm_wind', label: '"of the Wind" Set' },
+          { id: 'arm_twilight', label: '"of Twilight" Set' },
+          { id: 'arm_sky', label: '"of the Sky" Set' },
+          { id: 'arm_ancient_hero', label: "Ancient Hero's Aspect" },
+        ]
+      },
+    ]
+  },
+  {
+    id: 'misc',
+    icon: '✨',
+    title: 'Miscellaneous',
+    items: [
+      { id: 'all_hearts', label: 'All Hearts' },
+      { id: 'all_stamina', label: 'All Stamina' },
+      { id: 'char_profiles', label: '22 Character Profiles' },
+      { id: 'hudson_signs', label: '81 Hudson Signs' },
+      { id: 'recipes', label: '228 Recipes' },
+    ]
+  },
+];
+
+// ─── State ───────────────────────────────────────────────────────────────────
+const STORAGE_KEY = 'totk_progress_v1';
+let checked = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+
+function save() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(checked));
+}
+
+// ─── Build UI ────────────────────────────────────────────────────────────────
+const main = document.getElementById('main');
+
+function allItems(cat) {
+  if (cat.items) return cat.items;
+  return cat.sections.flatMap(s => s.items);
+}
+
+function buildCard(cat) {
+  const items = allItems(cat);
+  const card = document.createElement('div');
+  card.className = 'cat-card';
+  card.dataset.catId = cat.id;
+
+  // header
+  const hdr = document.createElement('div');
+  hdr.className = 'cat-header';
+  hdr.innerHTML = `
+    <span class="cat-icon">${cat.icon}</span>
+    <span class="cat-title">${cat.title}</span>
+    <span class="cat-badge" data-badge="${cat.id}">0 / ${items.length}</span>
+    <span class="cat-chevron">▾</span>
+  `;
+  hdr.addEventListener('click', () => {
+    card.classList.toggle('collapsed');
+  });
+  card.appendChild(hdr);
+
+  // mini progress bar
+  const miniBar = document.createElement('div');
+  miniBar.className = 'mini-bar';
+  const miniFill = document.createElement('div');
+  miniFill.className = 'mini-bar-fill';
+  miniFill.dataset.miniFill = cat.id;
+  miniFill.style.width = '0%';
+  miniBar.appendChild(miniFill);
+  card.appendChild(miniBar);
+
+  // body
+  const body = document.createElement('div');
+  body.className = 'cat-body';
+
+  function addItems(itemList) {
+    itemList.forEach(item => {
+      const row = document.createElement('label');
+      row.className = 'check-item' + (checked[item.id] ? ' checked' : '');
+      row.dataset.itemId = item.id;
+      row.dataset.label = item.label.toLowerCase();
+      row.innerHTML = `
+        <input type="checkbox" ${checked[item.id] ? 'checked' : ''}>
+        <div class="custom-cb"></div>
+        <div>
+          <div class="item-label">${item.label}</div>
+          ${item.note ? `<div class="item-note">${item.note}</div>` : ''}
+        </div>
+      `;
+      row.addEventListener('click', (e) => {
+        e.preventDefault();
+        checked[item.id] = !checked[item.id];
+        row.classList.toggle('checked', checked[item.id]);
+        save();
+        updateProgress();
+        updateCatBadge(cat);
+      });
+      body.appendChild(row);
+    });
+  }
+
+  if (cat.items) {
+    addItems(cat.items);
+  } else {
+    cat.sections.forEach(sec => {
+      const lbl = document.createElement('div');
+      lbl.className = 'section-label';
+      lbl.textContent = sec.label;
+      body.appendChild(lbl);
+      addItems(sec.items);
+    });
+  }
+
+  card.appendChild(body);
+  return card;
+}
+
+CATEGORIES.forEach(cat => main.appendChild(buildCard(cat)));
+
+// ─── Progress ────────────────────────────────────────────────────────────────
+function updateProgress() {
+  const allIds = CATEGORIES.flatMap(c => allItems(c).map(i => i.id));
+  const total = allIds.length;
+  const done = allIds.filter(id => checked[id]).length;
+  const pct = total ? (done / total) : 0;
+
+  document.getElementById('pct-label').textContent = Math.round(pct * 100) + '%';
+  document.getElementById('main-bar').style.width = (pct * 100) + '%';
+  document.getElementById('count-done').textContent = done + ' checked';
+  document.getElementById('count-total').textContent = total + ' total';
+
+  // SVG arc (r=52, circumference=326.73)
+  const circ = 326.73;
+  document.getElementById('progress-arc').setAttribute('stroke-dashoffset', circ * (1 - pct));
+}
+
+function updateCatBadge(cat) {
+  const items = allItems(cat);
+  const done = items.filter(i => checked[i.id]).length;
+  const badge = document.querySelector(`[data-badge="${cat.id}"]`);
+  const fill = document.querySelector(`[data-mini-fill="${cat.id}"]`);
+  if (badge) {
+    badge.textContent = `${done} / ${items.length}`;
+    badge.classList.toggle('complete', done === items.length);
+  }
+  if (fill) fill.style.width = (items.length ? (done / items.length * 100) : 0) + '%';
+}
+
+function updateAll() {
+  updateProgress();
+  CATEGORIES.forEach(cat => updateCatBadge(cat));
+}
+
+updateAll();
+
+// ─── Controls ────────────────────────────────────────────────────────────────
+function expandAll() {
+  document.querySelectorAll('.cat-card').forEach(c => c.classList.remove('collapsed'));
+}
+function collapseAll() {
+  document.querySelectorAll('.cat-card').forEach(c => c.classList.add('collapsed'));
+}
+function showAll() {
+  document.querySelectorAll('.cat-card').forEach(c => c.classList.remove('hidden'));
+  document.querySelectorAll('.check-item').forEach(r => r.classList.remove('hidden'));
+  document.getElementById('search').value = '';
+}
+function hideCompleted() {
+  CATEGORIES.forEach(cat => {
+    const items = allItems(cat);
+    const done = items.filter(i => checked[i.id]).length;
+    const card = document.querySelector(`[data-cat-id="${cat.id}"]`);
+    if (card) card.classList.toggle('hidden', done === items.length);
+  });
+}
+function confirmReset() {
+  if (confirm('Reset ALL progress? This cannot be undone.')) {
+    checked = {};
+    save();
+    document.querySelectorAll('.check-item').forEach(row => {
+      row.classList.remove('checked');
+    });
+    updateAll();
+  }
+}
+function filterSearch(q) {
+  const query = q.trim().toLowerCase();
+  CATEGORIES.forEach(cat => {
+    const card = document.querySelector(`[data-cat-id="${cat.id}"]`);
+    const rows = card.querySelectorAll('.check-item');
+    let anyVisible = false;
+    rows.forEach(row => {
+      const match = !query || row.dataset.label.includes(query);
+      row.classList.toggle('hidden', !match);
+      if (match) anyVisible = true;
+    });
+    card.classList.toggle('hidden', !anyVisible);
+  });
+}
+</script>
+</body>
+</html>
